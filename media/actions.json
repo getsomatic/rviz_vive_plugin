@@ -1,0 +1,71 @@
+{
+  "default_bindings": [
+    {
+      "controller_type": "vive_controller",
+      "binding_url": "bindings.json"
+    }
+  ],
+  "actions": [
+    {
+      "name": "/actions/demo/in/Hand_Right",
+      "type": "pose"
+    },
+    {
+      "name": "/actions/demo/in/Hand_Left",
+      "type": "pose"
+    },
+    {
+      "name": "/actions/demo/in/Hand_Left_Menu_Pressed",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/demo/in/Hand_Right_Menu_Pressed",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/demo/in/Hand_Left_Trigger_Pressed",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/demo/in/Hand_Right_Trigger_Pressed",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/demo/in/Hand_Left_Grip",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/demo/in/Hand_Right_Grip",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/demo/in/Hand_Left_Trackpad",
+      "type": "vector2"
+    },
+    {
+      "name": "/actions/demo/in/Hand_Right_Trackpad",
+      "type": "vector2"
+    },
+    {
+      "name": "/actions/demo/out/Hand_Left_Vibration",
+      "type": "vibration"
+    },
+    {
+      "name": "/actions/demo/out/Hand_Right_Vibration",
+      "type": "vibration"
+    },
+    {
+      "name": "/actions/demo/in/Hand_Left_Trackpad_Pressed",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/demo/in/Hand_Right_Trackpad_Pressed",
+      "type": "boolean"
+    }
+  ],
+  "localization": [
+    {
+      "language_tag": "en_US"
+    }
+  ]
+}

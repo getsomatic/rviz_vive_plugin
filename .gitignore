@@ -1,0 +1,34 @@
+# OS X
+*.DS_Store
+
+# Xcode
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.xcuserdatad
+
+# build
+build/
+Build/
+DerivedData/
+
+# temp nibs and swap files
+*~.nib
+*.swp
+*.orig
+
+# CocoaPods
+Pods
+
+# VSCode
+.vscode
+
+# AppCode
+.idea
+cmake-build-debug
+
+# Carthage
+Carthage/Build
+Carthage/Checkouts
+

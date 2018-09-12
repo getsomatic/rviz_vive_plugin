@@ -1,0 +1,121 @@
+{
+  "bindings": {
+    "/actions/demo": {
+      "poses": [
+        {
+          "output": "/actions/demo/in/hand_left",
+          "path": "/user/hand/left/pose/raw"
+        },
+        {
+          "output": "/actions/demo/in/hand_right",
+          "path": "/user/hand/right/pose/raw"
+        }
+      ],
+      "haptics": [
+        {
+          "output": "/actions/demo/out/Hand_Right_Vibration",
+          "path": "/user/hand/right/output/haptic"
+        },
+        {
+          "output": "/actions/demo/out/Hand_Left_Vibration",
+          "path": "/user/hand/left/output/haptic"
+        }
+      ],
+      "sources": [
+        {
+          "inputs": {
+            "click": {
+              "output": "/actions/demo/in/Hand_Right_Trigger_Pressed"
+            }
+          },
+          "mode": "button",
+          "path": "/user/hand/right/input/trigger"
+        },
+        {
+          "inputs": {
+            "click": {
+              "output": "/actions/demo/in/Hand_Left_Trigger_Pressed"
+            }
+          },
+          "mode": "button",
+          "path": "/user/hand/left/input/trigger"
+        },
+        {
+          "inputs": {
+            "click": {
+              "output": "/actions/demo/in/Hand_Left_Menu_Pressed"
+            }
+          },
+          "mode": "button",
+          "path": "/user/hand/left/input/application_menu"
+        },
+        {
+          "inputs": {
+            "click": {
+              "output": "/actions/demo/in/Hand_Right_Menu_Pressed"
+            }
+          },
+          "mode": "button",
+          "path": "/user/hand/right/input/application_menu"
+        },
+        {
+          "inputs": {
+            "position": {
+              "output": "/actions/demo/in/Hand_Left_Trackpad"
+            }
+          },
+          "mode": "trackpad",
+          "path": "/user/hand/left/input/trackpad"
+        },
+        {
+          "inputs": {
+            "position": {
+              "output": "/actions/demo/in/Hand_Right_Trackpad"
+            }
+          },
+          "mode": "trackpad",
+          "path": "/user/hand/right/input/trackpad"
+        },
+        {
+          "inputs" : {
+            "click" : {
+              "output" : "/actions/demo/in/Hand_Left_Grip"
+            }
+          },
+          "mode" : "button",
+          "path" : "/user/hand/left/input/grip"
+        },
+        {
+          "inputs" : {
+            "click" : {
+              "output" : "/actions/demo/in/Hand_Right_Grip"
+            }
+          },
+          "mode" : "button",
+          "path" : "/user/hand/right/input/grip"
+        },
+        {
+          "inputs" : {
+            "click" : {
+              "output" : "/actions/demo/in/Hand_Left_Trackpad_Pressed"
+            }
+          },
+          "mode" : "button",
+          "path" : "/user/hand/left/input/trackpad"
+        },
+        {
+          "inputs" : {
+            "click" : {
+              "output" : "/actions/demo/in/Hand_Right_Trackpad_Pressed"
+            }
+          },
+          "mode" : "button",
+          "path" : "/user/hand/right/input/trackpad"
+        }
+      ]
+    }
+  },
+  "controller_type": "vive_controller",
+  "description": "Bindings for the HTC Vive controller",
+  "name": "Bindings for HTC Vive Controller"
+}
