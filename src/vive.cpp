@@ -247,14 +247,14 @@ vr::HmdMatrix44_t Vive::RightEyeProjectionMatrix(float nearClip, float farClip) 
     return vrSystem_->GetProjectionMatrix(vr::EVREye::Eye_Right, nearClip, farClip);
 }
 
-void Vive::VibrateLeft(float duration) {
+void Vive::VibrateLeft() {
     vr::VRInput()->TriggerHapticVibrationAction(
-            actions_.Left.Vibration, 0, duration, 4.f, 1.0f, vr::k_ulInvalidInputValueHandle);
+            actions_.Left.Vibration, 0, 1.0f, 4.0f, 1.0f, vr::k_ulInvalidInputValueHandle);
 }
 
-void Vive::VibrateRight(float duration) {
+void Vive::VibrateRight() {
     vr::VRInput()->TriggerHapticVibrationAction(
-            actions_.Right.Vibration, 0, duration, 4.f, 1.0f, vr::k_ulInvalidInputValueHandle);
+            actions_.Right.Vibration, 0, 1.0f, 4.0f, 1.0f, vr::k_ulInvalidInputValueHandle);
 }
 
 std::string Vive::TrackedDeviceString(vr::TrackedDeviceIndex_t unDevice, vr::TrackedDeviceProperty prop) {

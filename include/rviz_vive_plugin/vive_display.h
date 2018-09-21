@@ -88,6 +88,8 @@ private:
         ros::Subscriber VibrationLeft;
         ros::Subscriber VibrationRight;
     } subs_;
+    ros::Time leftVibrationTimestamp_, rightVibrationTimestamp_;
+    double leftVibrationDuration_, rightVibrationDuration_;
 
     Vive vive_;
 };

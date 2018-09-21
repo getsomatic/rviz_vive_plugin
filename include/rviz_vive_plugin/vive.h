@@ -44,9 +44,9 @@ public:
 
     void SubmitGLTextures();
 
-    void VibrateLeft(float duration);
+    void VibrateLeft();
 
-    void VibrateRight(float duration);
+    void VibrateRight();
 
 public:
     const std::string &Driver() const { return driver_; }

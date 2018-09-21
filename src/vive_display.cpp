@@ -205,6 +205,16 @@ bool ViveDisplay::InitOgre() {
 }
 
 void ViveDisplay::update(float, float) {
+    const auto now = ros::Time::now();
+    const auto dt1 = now - leftVibrationTimestamp_;
+    const auto dt2 = now - rightVibrationTimestamp_;
+
+    if (dt1.toSec() < leftVibrationDuration_)
+        vive_.VibrateLeft();
+
+    if (dt2.toSec() < rightVibrationDuration_)
+        vive_.VibrateRight();
+
     Vive::HMD viveHMD{};
     if (vive_.ReadHMD(viveHMD)) {
         const auto &hmd = Convert(viveHMD);
@@ -246,11 +256,13 @@ void ViveDisplay::reset() {
 }
 
 void ViveDisplay::LeftVibrationMessageReceived(const std_msgs::Float32Ptr &msg) {
-    vive_.VibrateLeft(msg->data);
+    leftVibrationTimestamp_ = ros::Time::now();
+    leftVibrationDuration_ = msg->data;
 }
 
 void ViveDisplay::RightVibrationMessageReceived(const std_msgs::Float32Ptr &msg) {
-    vive_.VibrateRight(msg->data);
+    rightVibrationTimestamp_ = ros::Time::now();
+    rightVibrationDuration_ = msg->data;
 }
 
 } // namespace rviz_vive_plugin
