@@ -18,7 +18,7 @@
 #include <std_msgs/Float32.h>
 
 #include "rviz_vive_plugin/vive.h"
-#include "rviz_vive_plugin/vive_conversations.h"
+#include "rviz_vive_plugin/vive_conversions.h"
 
 namespace Ogre {
 class SceneNode;

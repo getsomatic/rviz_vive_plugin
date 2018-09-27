@@ -34,7 +34,7 @@ include_directories(
 add_library(rviz_vive_plugin
     src/vive_display.cpp
     src/vive.cpp
-    src/vive_conversations.cpp
+    src/vive_conversions.cpp
     ${MOC_FILES}
 )
 

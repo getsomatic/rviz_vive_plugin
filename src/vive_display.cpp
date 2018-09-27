@@ -43,7 +43,7 @@
 #include <sensor_msgs/Joy.h>
 
 #include "rviz_vive_plugin/vive_display.h"
-#include "rviz_vive_plugin/vive_conversations.h"
+#include "rviz_vive_plugin/vive_conversions.h"
 #include "rviz_vive_plugin/vive.h"
 
 static inline tf::StampedTransform BuildTransform(const rviz_vive_plugin::Pose &pose,

@@ -2,7 +2,7 @@
 // Created by Denys Kotelovych on 07.09.18.
 //
 
-#include "rviz_vive_plugin/vive_conversations.h"
+#include "rviz_vive_plugin/vive_conversions.h"
 
 namespace rviz_vive_plugin {
 

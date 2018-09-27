@@ -2,8 +2,8 @@
 // Created by Denys Kotelovych on 07.09.18.
 //
 
-#ifndef RVIZ_VIVE_PLUGIN_VIVE_CONVERSATIONS_H
-#define RVIZ_VIVE_PLUGIN_VIVE_CONVERSATIONS_H
+#ifndef RVIZ_VIVE_PLUGIN_VIVE_CONVERSIONS_H
+#define RVIZ_VIVE_PLUGIN_VIVE_CONVERSIONS_H
 
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreMatrix4.h>
