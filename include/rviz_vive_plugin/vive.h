@@ -34,6 +34,8 @@ public:
 public:
     bool Init(const std::string &actionManifestPath);
 
+    bool ReadAll();
+
     bool ReadHMD(HMD &hmd);
 
     bool ReadLeftController(Controller &controller);

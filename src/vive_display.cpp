@@ -215,6 +215,9 @@ void ViveDisplay::update(float, float) {
     if (dt2.toSec() < rightVibrationDuration_)
         vive_.VibrateRight();
 
+    if (!vive_.ReadAll())
+        ROS_ERROR_STREAM_NAMED("vive_display", "Failed to all Vive data");
+
     Vive::HMD viveHMD{};
     if (vive_.ReadHMD(viveHMD)) {
         const auto &hmd = Convert(viveHMD);

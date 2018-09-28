@@ -159,6 +159,18 @@ bool Vive::Init(const std::string &actionManifestPath) {
     return true;
 }
 
+bool Vive::ReadAll() {
+    vr::VRActiveActionSet_t actionSet = {};
+    actionSet.ulActionSet = actionSet_;
+
+    if (vr::VRInput()->UpdateActionState(&actionSet, sizeof(actionSet), 1) != vr::VRInputError_None) {
+        ROS_ERROR_STREAM_NAMED("vive", "Error updating actions state");
+        return false;
+    }
+
+    return true;
+}
+
 bool Vive::ReadHMD(Vive::HMD &result) {
     vr::VRCompositor()->WaitGetPoses(trackedPoses_, vr::k_unMaxTrackedDeviceCount, nullptr, 0);
 
@@ -168,14 +180,6 @@ bool Vive::ReadHMD(Vive::HMD &result) {
 }
 
 bool Vive::ReadLeftController(Vive::Controller &result) {
-    vr::VRActiveActionSet_t actionSet = {};
-    actionSet.ulActionSet = actionSet_;
-
-    if (vr::VRInput()->UpdateActionState(&actionSet, sizeof(actionSet), 1) != vr::VRInputError_None) {
-        ROS_ERROR_STREAM_NAMED("vive", "Error updating actions state");
-        return false;
-    }
-
     if (!LoadPoseActionData(actions_.Left.Pose, result.Pose)) {
         ROS_ERROR_STREAM_NAMED("vive", "Error loading left controller position");
         return false;
@@ -195,14 +199,6 @@ bool Vive::ReadLeftController(Vive::Controller &result) {
 }
 
 bool Vive::ReadRightController(Vive::Controller &result) {
-    vr::VRActiveActionSet_t actionSet = {};
-    actionSet.ulActionSet = actionSet_;
-
-    if (vr::VRInput()->UpdateActionState(&actionSet, sizeof(actionSet), 1) != vr::VRInputError_None) {
-        ROS_ERROR_STREAM_NAMED("vive", "Error updating actions state");
-        return false;
-    }
-
     if (!LoadPoseActionData(actions_.Right.Pose, result.Pose)) {
         ROS_ERROR_STREAM_NAMED("vive", "Error loading right controller position");
         return false;
