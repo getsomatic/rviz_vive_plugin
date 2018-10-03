@@ -80,6 +80,10 @@ ViveDisplay::ViveDisplay() {
     ogre_.Right.TextureGLID = 0;
     ogre_.Left.Viewport = nullptr;
     ogre_.Right.Viewport = nullptr;
+    leftVibrationDuration_ = 0.0;
+    rightVibrationDuration_ = 0.0;
+    leftVibrationTimestamp_ = ros::Time::now();
+    rightVibrationTimestamp_ = ros::Time::now();
 }
 
 ViveDisplay::~ViveDisplay() {
