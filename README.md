@@ -8,6 +8,7 @@
     ```bash
     cd catkin_ws/src
     git clone git@github.com:getsomatic/rviz_vive_plugin.git
+    git clone git@github.com:getsomatic/rviz_vive_plugin_msgs.git
     cd ../..
     catkin build -DOPENVR="..."
     ```
