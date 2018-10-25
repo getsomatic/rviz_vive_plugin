@@ -5,7 +5,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 
-find_package(catkin REQUIRED COMPONENTS rviz)
+find_package(catkin REQUIRED COMPONENTS rviz rviz_vive_plugin_msgs)
 find_package(OpenVR REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(Qt5 ${rviz_QT_VERSION} EXACT REQUIRED Core Widgets)

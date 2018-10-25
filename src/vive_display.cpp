@@ -41,6 +41,7 @@
 #include <rviz/frame_manager.h>
 
 #include <sensor_msgs/Joy.h>
+#include <rviz_vive_plugin_msgs/Controller.h>
 
 #include "rviz_vive_plugin/vive_display.h"
 #include "rviz_vive_plugin/vive_conversions.h"
@@ -56,17 +57,17 @@ static inline tf::StampedTransform BuildTransform(const rviz_vive_plugin::Pose &
             ), ros::Time::now(), parentFrameId, childFrameId);
 }
 
-static inline sensor_msgs::Joy BuildMessage(const rviz_vive_plugin::Controller &controller) {
-    sensor_msgs::Joy msg;
+static inline rviz_vive_plugin_msgs::Controller BuildMessage(const rviz_vive_plugin::Controller &controller) {
+    rviz_vive_plugin_msgs::Controller msg;
     msg.header.stamp = ros::Time::now();
-    msg.axes.push_back(0.0); // TBD: trigger position
-    msg.axes.push_back(controller.TrackpadPosition.x);
-    msg.axes.push_back(controller.TrackpadPosition.y);
-    msg.buttons.push_back(controller.TriggerPressed);
-    msg.buttons.push_back(0); // TBD: trackpad touched
-    msg.buttons.push_back(controller.TrackpadPressed);
-    msg.buttons.push_back(controller.MenuPressed);
-    msg.buttons.push_back(controller.GripPressed);
+    msg.trackpad_position.x = controller.TrackpadPosition.x;
+    msg.trackpad_position.y = controller.TrackpadPosition.y;
+    msg.trackpad_position.z = 0.0f;
+    msg.trigger = controller.TriggerPressed; // TBD: trigger value
+    msg.trackpad_touched = 0; // TBD: trackpad touched
+    msg.trackpad_pressed = static_cast<unsigned char>(controller.TrackpadPressed);
+    msg.menu_pressed = static_cast<unsigned char>(controller.MenuPressed);
+    msg.grip_pressed = static_cast<unsigned char>(controller.GripPressed);
     return msg;
 };
 
@@ -101,8 +102,8 @@ ViveDisplay::~ViveDisplay() {
 };
 
 void ViveDisplay::onInitialize() {
-    pubs_.LeftHand = node_.advertise<sensor_msgs::Joy>("/vive/left_controller/state", 1);
-    pubs_.RightHand = node_.advertise<sensor_msgs::Joy>("/vive/right_controller/state", 1);
+    pubs_.LeftHand = node_.advertise<rviz_vive_plugin_msgs::Controller>("/vive/left_controller/state", 1);
+    pubs_.RightHand = node_.advertise<rviz_vive_plugin_msgs::Controller>("/vive/right_controller/state", 1);
     subs_.VibrationLeft = node_.subscribe(
             "/vive/left_controller/vibration/cmd", 1, &ViveDisplay::LeftVibrationMessageReceived, this);
     subs_.VibrationRight = node_.subscribe(

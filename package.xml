@@ -13,6 +13,7 @@
     <depend>boost</depend>
     <depend>rviz</depend>
     <depend>tf</depend>
+    <depend>rviz_vive_plugin_msgs</depend>
     <export>
         <rviz plugin="${prefix}/plugin_description.xml"/>
     </export>
