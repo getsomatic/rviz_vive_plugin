@@ -51,15 +51,17 @@ static inline tf::StampedTransform BuildTransform(const rviz_vive_plugin::Pose &
                                                   const std::string &parentFrameId,
                                                   const std::string &childFrameId) {
     return tf::StampedTransform(
-            tf::Transform(
-                    tf::Quaternion(pose.Orientation.x, pose.Orientation.y, pose.Orientation.z, pose.Orientation.w),
-                    tf::Vector3(pose.Position.x, pose.Position.y, pose.Position.z)
-            ), ros::Time::now(), parentFrameId, childFrameId);
+        tf::Transform(
+            tf::Quaternion(pose.Orientation.x, pose.Orientation.y, pose.Orientation.z, pose.Orientation.w),
+            tf::Vector3(pose.Position.x, pose.Position.y, pose.Position.z)
+        ), ros::Time::now(), parentFrameId, childFrameId);
 }
 
-static inline rviz_vive_plugin_msgs::Controller BuildMessage(const rviz_vive_plugin::Controller &controller) {
+static inline rviz_vive_plugin_msgs::Controller BuildMessage(const rviz_vive_plugin::Controller &controller,
+                                                             const std::string &frameId) {
     rviz_vive_plugin_msgs::Controller msg;
     msg.header.stamp = ros::Time::now();
+    msg.header.frame_id = frameId;
     msg.trackpad_position.x = controller.TrackpadPosition.x;
     msg.trackpad_position.y = controller.TrackpadPosition.y;
     msg.trackpad_position.z = 0.0f;
@@ -105,9 +107,9 @@ void ViveDisplay::onInitialize() {
     pubs_.LeftHand = node_.advertise<rviz_vive_plugin_msgs::Controller>("/vive/left_controller/state", 1);
     pubs_.RightHand = node_.advertise<rviz_vive_plugin_msgs::Controller>("/vive/right_controller/state", 1);
     subs_.VibrationLeft = node_.subscribe(
-            "/vive/left_controller/vibration/cmd", 1, &ViveDisplay::LeftVibrationMessageReceived, this);
+        "/vive/left_controller/vibration/cmd", 1, &ViveDisplay::LeftVibrationMessageReceived, this);
     subs_.VibrationRight = node_.subscribe(
-            "/vive/right_controller/vibration/cmd", 1, &ViveDisplay::RightVibrationMessageReceived, this);
+        "/vive/right_controller/vibration/cmd", 1, &ViveDisplay::RightVibrationMessageReceived, this);
 
     if (!vive_.Init(ros::package::getPath("rviz_vive_plugin") + "/media/actions.json")) {
         ROS_ERROR_STREAM_NAMED("vive_display", "Failed to initialize Vive");
@@ -140,28 +142,28 @@ bool ViveDisplay::InitOgre() {
     auto textureManager = dynamic_cast<Ogre::GLTextureManager *>(Ogre::TextureManager::getSingletonPtr());
 
     ogre_.Left.Texture = textureManager->createManual(
-            "left_texture",
-            Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
-            Ogre::TEX_TYPE_2D,
-            vive_.RenderWidth(),
-            vive_.RenderHeight(),
-            0,
-            Ogre::PF_R8G8B8,
-            Ogre::TU_RENDERTARGET,
-            nullptr,
-            false);
+        "left_texture",
+        Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
+        Ogre::TEX_TYPE_2D,
+        vive_.RenderWidth(),
+        vive_.RenderHeight(),
+        0,
+        Ogre::PF_R8G8B8,
+        Ogre::TU_RENDERTARGET,
+        nullptr,
+        false);
 
     ogre_.Right.Texture = textureManager->createManual(
-            "right_texture",
-            Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
-            Ogre::TEX_TYPE_2D,
-            vive_.RenderWidth(),
-            vive_.RenderHeight(),
-            0,
-            Ogre::PF_R8G8B8,
-            Ogre::TU_RENDERTARGET,
-            nullptr,
-            false);
+        "right_texture",
+        Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
+        Ogre::TEX_TYPE_2D,
+        vive_.RenderWidth(),
+        vive_.RenderHeight(),
+        0,
+        Ogre::PF_R8G8B8,
+        Ogre::TU_RENDERTARGET,
+        nullptr,
+        false);
 
     ogre_.Left.Texture->getCustomAttribute("GLID", &ogre_.Left.TextureGLID);
     ogre_.Right.Texture->getCustomAttribute("GLID", &ogre_.Right.TextureGLID);
@@ -184,7 +186,7 @@ bool ViveDisplay::InitOgre() {
     ogre_.RenderWidget->setWindowTitle("Vive");
     ogre_.RenderWidget->setParent(context_->getWindowManager()->getParentWindow());
     ogre_.RenderWidget->setWindowFlags(
-            Qt::Window | Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowMaximizeButtonHint);
+        Qt::Window | Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowMaximizeButtonHint);
     ogre_.RenderWidget->setVisible(true);
 
     ogre_.RenderWindow = ogre_.RenderWidget->getRenderWindow();
@@ -238,7 +240,7 @@ void ViveDisplay::update(float, float) {
     if (vive_.ReadLeftController(viveLeftController)) {
         const auto &controller = Convert(viveLeftController);
         const auto &transform = BuildTransform(controller.Pose, "world", "vive_left_controller");
-        const auto &msg = BuildMessage(controller);
+        const auto &msg = BuildMessage(controller, "vive_left_controller");
         tb_.sendTransform(transform);
         pubs_.LeftHand.publish(msg);
     } else {
@@ -249,7 +251,7 @@ void ViveDisplay::update(float, float) {
     if (vive_.ReadRightController(viveRightController)) {
         const auto &controller = Convert(viveRightController);
         const auto &transform = BuildTransform(controller.Pose, "world", "vive_right_controller");
-        const auto &msg = BuildMessage(controller);
+        const auto &msg = BuildMessage(controller, "vive_right_controller");
         tb_.sendTransform(transform);
         pubs_.RightHand.publish(msg);
     } else {
