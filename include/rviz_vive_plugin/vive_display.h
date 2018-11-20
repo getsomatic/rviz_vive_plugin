@@ -74,7 +74,6 @@ private:
 
         struct {
             Ogre::SceneNode *Node;
-            Ogre::Light *Light;
         } HMD;
     } ogre_;
 

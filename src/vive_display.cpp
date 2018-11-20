@@ -96,7 +96,6 @@ ViveDisplay::~ViveDisplay() {
     subs_.VibrationRight.shutdown();
     scene_manager_->destroyCamera(ogre_.Left.EyeCamera);
     scene_manager_->destroyCamera(ogre_.Right.EyeCamera);
-    scene_manager_->destroyLight(ogre_.HMD.Light);
     scene_manager_->destroySceneNode(ogre_.HMD.Node);
     ogre_.RenderWindow->removeAllListeners();
     ogre_.RenderWindow->removeAllViewports();
@@ -201,12 +200,6 @@ bool ViveDisplay::InitOgre() {
     port = ogre_.RenderWindow->addViewport(ogre_.Right.EyeCamera, 1, 0.5f, 0.0f, 0.5f, 1.0f);
     port->setClearEveryFrame(true);
     port->setBackgroundColour(Ogre::ColourValue::Black);
-
-    ogre_.HMD.Light = scene_manager_->createLight("point_light");
-    ogre_.HMD.Light->setType(Ogre::Light::LT_POINT);
-    ogre_.HMD.Light->setDiffuseColour(1.0, 1.0, 1.0);
-    ogre_.HMD.Light->setSpecularColour(1.0, 1.0, 1.0);
-    ogre_.HMD.Node->attachObject(ogre_.HMD.Light);
 
     return true;
 }
