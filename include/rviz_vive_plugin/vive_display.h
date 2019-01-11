@@ -5,20 +5,21 @@
 #ifndef RVIZ_VIVE_PLUGIN_VIVE_DISPLAY_H
 #define RVIZ_VIVE_PLUGIN_VIVE_DISPLAY_H
 
-#ifndef Q_MOC_RUN
-
 #include <rviz/display.h>
 
-#endif
+#ifndef Q_MOC_RUN
 
 #include <OGRE/OgreTexture.h>
 #include <GL/glew.h>
 #include <tf/transform_broadcaster.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Float32.h>
+#include <geometry_msgs/Point32.h>
 
 #include "rviz_vive_plugin/vive.h"
 #include "rviz_vive_plugin/vive_conversions.h"
+
+#endif
 
 namespace Ogre {
 class SceneNode;
@@ -33,6 +34,12 @@ class RenderWindow;
 namespace rviz {
 
 class RenderWidget;
+
+class StringProperty;
+
+class RosTopicProperty;
+
+class TfFrameProperty;
 
 }
 
@@ -50,17 +57,44 @@ public:
 
     virtual void update(float wall_dt, float ros_dt) override;
 
-    virtual void reset() override;
-
 private:
-    bool InitOgre();
+    void InitProperties();
+
+    void InitOgre();
+
+private Q_SLOTS:
+
+    void LeftStateTopicPropertyChanged();
+
+    void RightStateTopicPropertyChanged();
+
+    void LeftVibrationTopicPropertyChanged();
+
+    void RightVibrationTopicPropertyChanged();
+
+    void OffsetTopicPropertyChanged();
 
 private:
     void LeftVibrationMessageReceived(const std_msgs::Float32Ptr &msg);
 
     void RightVibrationMessageReceived(const std_msgs::Float32Ptr &msg);
 
+    void HMDOffsetMessageReceived(const geometry_msgs::Point32Ptr &msg);
+
 private:
+    struct {
+        struct {
+            rviz::StringProperty *Frame;
+            rviz::StringProperty *StateTopic;
+            rviz::RosTopicProperty *VibrationTopic;
+        } Left, Right;
+        struct {
+            rviz::StringProperty *Frame;
+        } HMD;
+        rviz::RosTopicProperty *OffsetTopic;
+        rviz::TfFrameProperty *RootFrame;
+    } properties_;
+
     struct {
         rviz::RenderWidget *RenderWidget;
         Ogre::RenderWindow *RenderWindow;
@@ -86,9 +120,11 @@ private:
     struct {
         ros::Subscriber VibrationLeft;
         ros::Subscriber VibrationRight;
+        ros::Subscriber HMDOffset;
     } subs_;
     ros::Time leftVibrationTimestamp_, rightVibrationTimestamp_;
     double leftVibrationDuration_, rightVibrationDuration_;
+    Ogre::Vector3 offset_;
 
     Vive vive_;
 };

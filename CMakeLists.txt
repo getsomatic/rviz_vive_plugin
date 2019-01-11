@@ -17,7 +17,21 @@ set(QT_LIBRARIES Qt5::Widgets)
 add_definitions(-DQT_NO_KEYWORDS)
 add_definitions(-DLINUX -DPOSIX)
 
-catkin_package()
+catkin_package(
+  INCLUDE_DIRS
+    include
+  LIBRARIES
+    rviz_vive_plugin
+  CATKIN_DEPENDS
+    roscpp
+    libogre-dev
+    libqt4-dev
+    libqt4-opengl-dev
+    boost
+    rviz
+    tf
+    rviz_vive_plugin_msgs
+)
 
 qt5_wrap_cpp(MOC_FILES
     ./include/rviz_vive_plugin/vive_display.h

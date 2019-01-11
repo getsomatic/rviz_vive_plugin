@@ -3,10 +3,9 @@
 //
 
 #include <random>
-
+#include <ros/package.h>
 #include <QApplication>
 #include <QDesktopWidget>
-
 #include <OGRE/OgreRoot.h>
 #include <OGRE/OgreSceneNode.h>
 #include <OGRE/OgreRenderWindow.h>
@@ -23,24 +22,14 @@
 #include <OGRE/RenderSystems/GL/OgreGLTextureManager.h>
 #include <OGRE/RenderSystems/GL/OgreGLRenderSystem.h>
 #include <OGRE/RenderSystems/GL/OgreGLTexture.h>
-
 #include <rviz/properties/tf_frame_property.h>
-#include <rviz/properties/quaternion_property.h>
-#include <rviz/properties/float_property.h>
-#include <rviz/properties/bool_property.h>
-#include <rviz/properties/vector_property.h>
-#include <rviz/properties/int_property.h>
+#include <rviz/properties/ros_topic_property.h>
+#include <rviz/properties/string_property.h>
 #include <rviz/window_manager_interface.h>
-#include <rviz/view_manager.h>
-#include <rviz/render_panel.h>
 #include <rviz/display_context.h>
 #include <rviz/ogre_helpers/render_widget.h>
 #include <rviz/ogre_helpers/render_system.h>
-#include <rviz/ogre_helpers/shape.h>
-#include <rviz/ogre_helpers/line.h>
 #include <rviz/frame_manager.h>
-
-#include <sensor_msgs/Joy.h>
 #include <rviz_vive_plugin_msgs/Controller.h>
 
 #include "rviz_vive_plugin/vive_display.h"
@@ -51,10 +40,10 @@ static inline tf::StampedTransform BuildTransform(const rviz_vive_plugin::Pose &
                                                   const std::string &parentFrameId,
                                                   const std::string &childFrameId) {
     return tf::StampedTransform(
-        tf::Transform(
-            tf::Quaternion(pose.Orientation.x, pose.Orientation.y, pose.Orientation.z, pose.Orientation.w),
-            tf::Vector3(pose.Position.x, pose.Position.y, pose.Position.z)
-        ), ros::Time::now(), parentFrameId, childFrameId);
+            tf::Transform(
+                    tf::Quaternion(pose.Orientation.x, pose.Orientation.y, pose.Orientation.z, pose.Orientation.w),
+                    tf::Vector3(pose.Position.x, pose.Position.y, pose.Position.z)
+            ), ros::Time::now(), parentFrameId, childFrameId);
 }
 
 static inline rviz_vive_plugin_msgs::Controller BuildMessage(const rviz_vive_plugin::Controller &controller,
@@ -87,6 +76,7 @@ ViveDisplay::ViveDisplay() {
     rightVibrationDuration_ = 0.0;
     leftVibrationTimestamp_ = ros::Time::now();
     rightVibrationTimestamp_ = ros::Time::now();
+    offset_ = Ogre::Vector3::ZERO;
 }
 
 ViveDisplay::~ViveDisplay() {
@@ -103,25 +93,68 @@ ViveDisplay::~ViveDisplay() {
 };
 
 void ViveDisplay::onInitialize() {
-    pubs_.LeftHand = node_.advertise<rviz_vive_plugin_msgs::Controller>("/vive/left_controller/state", 1);
-    pubs_.RightHand = node_.advertise<rviz_vive_plugin_msgs::Controller>("/vive/right_controller/state", 1);
+    InitProperties();
+
+    pubs_.LeftHand = node_.advertise<rviz_vive_plugin_msgs::Controller>(
+            properties_.Left.StateTopic->getStdString(), 1);
+    pubs_.RightHand = node_.advertise<rviz_vive_plugin_msgs::Controller>(
+            properties_.Right.StateTopic->getStdString(), 1);
     subs_.VibrationLeft = node_.subscribe(
-        "/vive/left_controller/vibration/cmd", 1, &ViveDisplay::LeftVibrationMessageReceived, this);
+            properties_.Left.VibrationTopic->getStdString(), 1, &ViveDisplay::LeftVibrationMessageReceived, this);
     subs_.VibrationRight = node_.subscribe(
-        "/vive/right_controller/vibration/cmd", 1, &ViveDisplay::RightVibrationMessageReceived, this);
+            properties_.Right.VibrationTopic->getStdString(), 1, &ViveDisplay::RightVibrationMessageReceived, this);
+    subs_.HMDOffset = node_.subscribe(
+            properties_.OffsetTopic->getStdString(), 1, &ViveDisplay::HMDOffsetMessageReceived, this);
 
     if (!vive_.Init(ros::package::getPath("rviz_vive_plugin") + "/media/actions.json")) {
         ROS_ERROR_STREAM_NAMED("vive_display", "Failed to initialize Vive");
         return;
     }
 
-    if (!InitOgre()) {
-        ROS_ERROR_STREAM_NAMED("vive_display", "Failed to initialize Ogre");
-        return;
-    }
+    InitOgre();
 }
 
-bool ViveDisplay::InitOgre() {
+void ViveDisplay::InitProperties() {
+    properties_.RootFrame = new rviz::TfFrameProperty(
+            "Root frame", rviz::TfFrameProperty::FIXED_FRAME_STRING,
+            "Root frame for each transform", this, 0, true);
+
+    properties_.Left.Frame = new rviz::StringProperty(
+            "Left controller frame", "vive_left_controller", "Left controller frame", this);
+
+    properties_.Right.Frame = new rviz::StringProperty(
+            "Right controller frame", "vive_right_controller", "Right controller frame", this);
+
+    properties_.Left.StateTopic = new rviz::StringProperty(
+            "Left controller state topic", "/vive/left_controller/state", "Left controller state topic", this,
+            SLOT(LeftStateTopicPropertyChanged()));
+
+    properties_.Right.StateTopic = new rviz::StringProperty(
+            "Right controller state topic", "/vive/right_controller/state", "Right controller state topic", this,
+            SLOT(RightStateTopicPropertyChanged()));
+
+    properties_.Left.VibrationTopic = new rviz::RosTopicProperty(
+            "Left controller vibration topic", "",
+            QString::fromStdString(ros::message_traits::datatype<std_msgs::Float32>()),
+            "Left controller vibration topic", this, SLOT(LeftVibrationTopicPropertyChanged()));
+
+    properties_.Right.VibrationTopic = new rviz::RosTopicProperty(
+            "Right controller vibration topic", "",
+            QString::fromStdString(ros::message_traits::datatype<std_msgs::Float32>()),
+            "Right controller vibration topic", this, SLOT(RightVibrationTopicPropertyChanged()));
+
+    properties_.HMD.Frame = new rviz::StringProperty(
+            "HMD frame", "vive_left_controller", "HMD frame", this);
+
+    properties_.OffsetTopic = new rviz::RosTopicProperty(
+            "HMD offset topic", "",
+            QString::fromStdString(ros::message_traits::datatype<geometry_msgs::Point32>()),
+            "HMD offset topic", this, SLOT(OffsetTopicPropertyChanged()));
+
+    properties_.RootFrame->setFrameManager(context_->getFrameManager());
+}
+
+void ViveDisplay::InitOgre() {
     ogre_.HMD.Node = scene_manager_->getRootSceneNode()->createChildSceneNode();
 
     ogre_.Left.EyeCamera = scene_manager_->createCamera("left_camera");
@@ -141,28 +174,28 @@ bool ViveDisplay::InitOgre() {
     auto textureManager = dynamic_cast<Ogre::GLTextureManager *>(Ogre::TextureManager::getSingletonPtr());
 
     ogre_.Left.Texture = textureManager->createManual(
-        "left_texture",
-        Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
-        Ogre::TEX_TYPE_2D,
-        vive_.RenderWidth(),
-        vive_.RenderHeight(),
-        0,
-        Ogre::PF_R8G8B8,
-        Ogre::TU_RENDERTARGET,
-        nullptr,
-        false);
+            "left_texture",
+            Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
+            Ogre::TEX_TYPE_2D,
+            vive_.RenderWidth(),
+            vive_.RenderHeight(),
+            0,
+            Ogre::PF_R8G8B8,
+            Ogre::TU_RENDERTARGET,
+            nullptr,
+            false);
 
     ogre_.Right.Texture = textureManager->createManual(
-        "right_texture",
-        Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
-        Ogre::TEX_TYPE_2D,
-        vive_.RenderWidth(),
-        vive_.RenderHeight(),
-        0,
-        Ogre::PF_R8G8B8,
-        Ogre::TU_RENDERTARGET,
-        nullptr,
-        false);
+            "right_texture",
+            Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
+            Ogre::TEX_TYPE_2D,
+            vive_.RenderWidth(),
+            vive_.RenderHeight(),
+            0,
+            Ogre::PF_R8G8B8,
+            Ogre::TU_RENDERTARGET,
+            nullptr,
+            false);
 
     ogre_.Left.Texture->getCustomAttribute("GLID", &ogre_.Left.TextureGLID);
     ogre_.Right.Texture->getCustomAttribute("GLID", &ogre_.Right.TextureGLID);
@@ -185,7 +218,7 @@ bool ViveDisplay::InitOgre() {
     ogre_.RenderWidget->setWindowTitle("Vive");
     ogre_.RenderWidget->setParent(context_->getWindowManager()->getParentWindow());
     ogre_.RenderWidget->setWindowFlags(
-        Qt::Window | Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowMaximizeButtonHint);
+            Qt::Window | Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowMaximizeButtonHint);
     ogre_.RenderWidget->setVisible(true);
 
     ogre_.RenderWindow = ogre_.RenderWidget->getRenderWindow();
@@ -200,8 +233,6 @@ bool ViveDisplay::InitOgre() {
     port = ogre_.RenderWindow->addViewport(ogre_.Right.EyeCamera, 1, 0.5f, 0.0f, 0.5f, 1.0f);
     port->setClearEveryFrame(true);
     port->setBackgroundColour(Ogre::ColourValue::Black);
-
-    return true;
 }
 
 void ViveDisplay::update(float, float) {
@@ -220,10 +251,16 @@ void ViveDisplay::update(float, float) {
 
     Vive::HMD viveHMD{};
     if (vive_.ReadHMD(viveHMD)) {
-        const auto &hmd = Convert(viveHMD);
-        const auto &transform = BuildTransform(hmd.Pose, "world", "vive_hmd");
+        auto hmd = Convert(viveHMD);
+        hmd.Pose.Position += offset_;
+
         ogre_.HMD.Node->setPosition(hmd.Pose.Position);
         ogre_.HMD.Node->setOrientation(hmd.Pose.Orientation);
+
+        const auto &transform = BuildTransform(
+                hmd.Pose,
+                properties_.RootFrame->getFrame().toStdString(),
+                properties_.HMD.Frame->getStdString());
         tb_.sendTransform(transform);
     } else {
         ROS_ERROR_STREAM_NAMED("vive_display", "Failed to read HMD from Vive");
@@ -231,22 +268,34 @@ void ViveDisplay::update(float, float) {
 
     Vive::Controller viveLeftController{};
     if (vive_.ReadLeftController(viveLeftController)) {
-        const auto &controller = Convert(viveLeftController);
-        const auto &transform = BuildTransform(controller.Pose, "world", "vive_left_controller");
+        auto controller = Convert(viveLeftController);
+        controller.Pose.Position += offset_;
+
         const auto &msg = BuildMessage(controller, "vive_left_controller");
-        tb_.sendTransform(transform);
         pubs_.LeftHand.publish(msg);
+
+        const auto &transform = BuildTransform(
+                controller.Pose,
+                properties_.RootFrame->getFrame().toStdString(),
+                properties_.Left.Frame->getStdString());
+        tb_.sendTransform(transform);
     } else {
         ROS_ERROR_STREAM_NAMED("vive_display", "Failed to read left controller data from Vive");
     }
 
     Vive::Controller viveRightController{};
     if (vive_.ReadRightController(viveRightController)) {
-        const auto &controller = Convert(viveRightController);
-        const auto &transform = BuildTransform(controller.Pose, "world", "vive_right_controller");
+        auto controller = Convert(viveRightController);
+        controller.Pose.Position += offset_;
+
         const auto &msg = BuildMessage(controller, "vive_right_controller");
-        tb_.sendTransform(transform);
         pubs_.RightHand.publish(msg);
+
+        const auto &transform = BuildTransform(
+                controller.Pose,
+                properties_.RootFrame->getFrame().toStdString(),
+                properties_.Right.Frame->getStdString());
+        tb_.sendTransform(transform);
     } else {
         ROS_ERROR_STREAM_NAMED("vive_display", "Failed to read right controller data from Vive");
     }
@@ -255,7 +304,34 @@ void ViveDisplay::update(float, float) {
     vive_.SubmitGLTextures();
 }
 
-void ViveDisplay::reset() {
+void ViveDisplay::LeftStateTopicPropertyChanged() {
+    pubs_.LeftHand.shutdown();
+    pubs_.LeftHand = node_.advertise<rviz_vive_plugin_msgs::Controller>(
+            properties_.Left.StateTopic->getStdString(), 1);
+}
+
+void ViveDisplay::RightStateTopicPropertyChanged() {
+    pubs_.RightHand.shutdown();
+    pubs_.RightHand = node_.advertise<rviz_vive_plugin_msgs::Controller>(
+            properties_.Right.StateTopic->getStdString(), 1);
+}
+
+void ViveDisplay::LeftVibrationTopicPropertyChanged() {
+    subs_.VibrationLeft.shutdown();
+    subs_.VibrationLeft = node_.subscribe(
+            properties_.Left.VibrationTopic->getStdString(), 1, &ViveDisplay::LeftVibrationMessageReceived, this);
+}
+
+void ViveDisplay::RightVibrationTopicPropertyChanged() {
+    subs_.VibrationRight.shutdown();
+    subs_.VibrationRight = node_.subscribe(
+            properties_.Right.VibrationTopic->getStdString(), 1, &ViveDisplay::RightVibrationMessageReceived, this);
+}
+
+void ViveDisplay::OffsetTopicPropertyChanged() {
+    subs_.HMDOffset.shutdown();
+    subs_.HMDOffset = node_.subscribe(
+            properties_.OffsetTopic->getStdString(), 1, &ViveDisplay::HMDOffsetMessageReceived, this);
 }
 
 void ViveDisplay::LeftVibrationMessageReceived(const std_msgs::Float32Ptr &msg) {
@@ -266,6 +342,12 @@ void ViveDisplay::LeftVibrationMessageReceived(const std_msgs::Float32Ptr &msg) 
 void ViveDisplay::RightVibrationMessageReceived(const std_msgs::Float32Ptr &msg) {
     rightVibrationTimestamp_ = ros::Time::now();
     rightVibrationDuration_ = msg->data;
+}
+
+void ViveDisplay::HMDOffsetMessageReceived(const geometry_msgs::Point32Ptr &msg) {
+    offset_.x = msg->x;
+    offset_.y = msg->y;
+    offset_.z = msg->z;
 }
 
 } // namespace rviz_vive_plugin
