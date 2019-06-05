@@ -31,6 +31,7 @@
 #include <rviz/ogre_helpers/render_system.h>
 #include <rviz/frame_manager.h>
 #include <rviz_vive_plugin_msgs/Controller.h>
+#include <rviz_vive_plugin/vive_display.h>
 
 #include "rviz_vive_plugin/vive_display.h"
 #include "rviz_vive_plugin/vive_conversions.h"
@@ -82,6 +83,7 @@ ViveDisplay::ViveDisplay() {
 ViveDisplay::~ViveDisplay() {
     pubs_.LeftHand.shutdown();
     pubs_.RightHand.shutdown();
+    pubs_.HTC.shutdown();
     subs_.VibrationLeft.shutdown();
     subs_.VibrationRight.shutdown();
     scene_manager_->destroyCamera(ogre_.Left.EyeCamera);
@@ -99,6 +101,8 @@ void ViveDisplay::onInitialize() {
             properties_.Left.StateTopic->getStdString(), 1);
     pubs_.RightHand = node_.advertise<rviz_vive_plugin_msgs::Controller>(
             properties_.Right.StateTopic->getStdString(), 1);
+    pubs_.HTC = node_.advertise<geometry_msgs::Pose>("/vive/htc_position", 1);
+
     subs_.VibrationLeft = node_.subscribe(
             properties_.Left.VibrationTopic->getStdString(), 1, &ViveDisplay::LeftVibrationMessageReceived, this);
     subs_.VibrationRight = node_.subscribe(
@@ -256,6 +260,19 @@ void ViveDisplay::update(float, float) {
 
         ogre_.HMD.Node->setPosition(hmd.Pose.Position);
         ogre_.HMD.Node->setOrientation(hmd.Pose.Orientation);
+
+        geometry_msgs::Pose msg;
+
+        msg.position.x = hmd.Pose.Position.x;
+        msg.position.y = hmd.Pose.Position.y;
+        msg.position.z = hmd.Pose.Position.z;
+
+        msg.orientation.x = hmd.Pose.Orientation.x;
+        msg.orientation.y = hmd.Pose.Orientation.y;
+        msg.orientation.z = hmd.Pose.Orientation.z;
+        msg.orientation.w = hmd.Pose.Orientation.w;
+
+        pubs_.HTC.publish(msg);
 
         const auto &transform = BuildTransform(
                 hmd.Pose,

@@ -15,6 +15,7 @@
 #include <std_msgs/Bool.h>
 #include <std_msgs/Float32.h>
 #include <geometry_msgs/Point32.h>
+#include <geometry_msgs/Pose.h>
 
 #include "rviz_vive_plugin/vive.h"
 #include "rviz_vive_plugin/vive_conversions.h"
@@ -116,6 +117,7 @@ private:
     struct {
         ros::Publisher LeftHand;
         ros::Publisher RightHand;
+        ros::Publisher HTC;
     } pubs_;
     struct {
         ros::Subscriber VibrationLeft;
