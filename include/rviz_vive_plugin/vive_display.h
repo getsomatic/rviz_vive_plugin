@@ -63,6 +63,8 @@ private:
 
     void InitOgre();
 
+    void ResourceLocation();
+
 private Q_SLOTS:
 
     void LeftStateTopicPropertyChanged();
@@ -129,6 +131,7 @@ private:
     Ogre::Vector3 offset_;
 
     Vive vive_;
+
 };
 
 } // namespace rviz_vive_plugin

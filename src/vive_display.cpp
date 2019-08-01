@@ -32,10 +32,15 @@
 #include <rviz/frame_manager.h>
 #include <rviz_vive_plugin_msgs/Controller.h>
 #include <rviz_vive_plugin/vive_display.h>
+#include <dirent.h>
 
 #include "rviz_vive_plugin/vive_display.h"
 #include "rviz_vive_plugin/vive_conversions.h"
 #include "rviz_vive_plugin/vive.h"
+
+#include <OgreMeshManager.h>
+#include "boost/filesystem.hpp"
+#include <iostream>
 
 static inline tf::StampedTransform BuildTransform(const rviz_vive_plugin::Pose &pose,
                                                   const std::string &parentFrameId,
@@ -237,6 +242,32 @@ void ViveDisplay::InitOgre() {
     port = ogre_.RenderWindow->addViewport(ogre_.Right.EyeCamera, 1, 0.5f, 0.0f, 0.5f, 1.0f);
     port->setClearEveryFrame(true);
     port->setBackgroundColour(Ogre::ColourValue::Black);
+
+    ResourceLocation();
+}
+
+void ViveDisplay::ResourceLocation() {
+    std::string path = ros::package::getPath("robot_trajectory_editor") + "/ogre_media/";
+    Ogre::ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
+    for ( boost::filesystem::recursive_directory_iterator end, dir(path);dir != end; ++dir ) {
+
+        if (dir->path().filename().string().find(".") != std::string::npos) {
+            auto pos = dir->path().filename().string().find_last_of(".");
+
+            if (dir->path().filename().string().substr(pos+1) == ".material") {
+                Ogre::MaterialManager::getSingleton().load(dir->path().filename().string(),Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+            } else if (dir->path().filename().string().substr(pos+1) == ".mesh") {
+                Ogre::MeshManager::getSingleton().load(dir->path().filename().string(),Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+            } else if (dir->path().filename().string().substr(pos+1) == ".jpg") {
+                Ogre::TextureManager::getSingleton().load(dir->path().filename().string(),Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+
+            } else if (dir->path().filename().string().substr(pos+1) == ".png") {
+                Ogre::TextureManager::getSingleton().load(dir->path().filename().string(),Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+            }
+        }else {
+            Ogre::ResourceGroupManager::getSingleton().addResourceLocation(path + dir->path().filename().string() + "/", "FileSystem",Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+        }
+    }
 }
 
 void ViveDisplay::update(float, float) {
@@ -366,6 +397,8 @@ void ViveDisplay::HMDOffsetMessageReceived(const geometry_msgs::Point32Ptr &msg)
     offset_.y = msg->y;
     offset_.z = msg->z;
 }
+
+
 
 } // namespace rviz_vive_plugin
 
