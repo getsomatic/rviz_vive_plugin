@@ -63,8 +63,6 @@ private:
 
     void InitOgre();
 
-    void ResourceLocation();
-
 private Q_SLOTS:
 
     void LeftStateTopicPropertyChanged();
