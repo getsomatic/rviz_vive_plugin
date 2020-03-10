@@ -143,13 +143,13 @@ void ViveDisplay::InitProperties() {
             SLOT(RightStateTopicPropertyChanged()));
 
     properties_.Left.VibrationTopic = new rviz::RosTopicProperty(
-            "Left controller vibration topic", "",
-            QString::fromStdString(ros::message_traits::datatype<std_msgs::Float32>()),
+            "Left controller vibration topic", "/vive/left_controller_vibration",
+            QString::fromStdString(ros::message_traits::datatype<rviz_vive_plugin_msgs::ControllerVibration>()),
             "Left controller vibration topic", this, SLOT(LeftVibrationTopicPropertyChanged()));
 
     properties_.Right.VibrationTopic = new rviz::RosTopicProperty(
-            "Right controller vibration topic", "",
-            QString::fromStdString(ros::message_traits::datatype<std_msgs::Float32>()),
+            "Right controller vibration topic", "/vive/right_controller_vibration",
+            QString::fromStdString(ros::message_traits::datatype<rviz_vive_plugin_msgs::ControllerVibration>()),
             "Right controller vibration topic", this, SLOT(RightVibrationTopicPropertyChanged()));
 
     properties_.HMD.Frame = new rviz::StringProperty(
@@ -251,10 +251,10 @@ void ViveDisplay::update(float, float) {
     const auto dt2 = now - rightVibrationTimestamp_;
 
     if (dt1.toSec() < leftVibrationDuration_)
-        vive_.VibrateLeft();
+        vive_.VibrateLeft(0.0f,1.0f,4.0f,1.0f);
 
     if (dt2.toSec() < rightVibrationDuration_)
-        vive_.VibrateRight();
+        vive_.VibrateRight(0.0f,1.0f,4.0f,1.0f);
 
     if (!vive_.ReadAll())
         ROS_ERROR_STREAM_NAMED("vive_display", "Failed to all Vive data");
@@ -357,14 +357,16 @@ void ViveDisplay::OffsetTopicPropertyChanged() {
             properties_.OffsetTopic->getStdString(), 1, &ViveDisplay::HMDOffsetMessageReceived, this);
 }
 
-void ViveDisplay::LeftVibrationMessageReceived(const std_msgs::Float32Ptr &msg) {
+void ViveDisplay::LeftVibrationMessageReceived(const rviz_vive_plugin_msgs::ControllerVibrationPtr &msg) {
     leftVibrationTimestamp_ = ros::Time::now();
-    leftVibrationDuration_ = msg->data;
+    leftVibrationDuration_ = msg->durationSeconds;
+    vive_.VibrateLeft(msg->startSecondsFromNow,msg->durationSeconds,msg->frequency, msg->amplitude);
 }
 
-void ViveDisplay::RightVibrationMessageReceived(const std_msgs::Float32Ptr &msg) {
+void ViveDisplay::RightVibrationMessageReceived(const rviz_vive_plugin_msgs::ControllerVibrationPtr &msg) {
     rightVibrationTimestamp_ = ros::Time::now();
-    rightVibrationDuration_ = msg->data;
+    rightVibrationDuration_ = msg->durationSeconds;
+    vive_.VibrateRight(msg->startSecondsFromNow,msg->durationSeconds,msg->frequency, msg->amplitude);
 }
 
 void ViveDisplay::HMDOffsetMessageReceived(const geometry_msgs::Point32Ptr &msg) {

@@ -19,6 +19,7 @@
 
 #include "rviz_vive_plugin/vive.h"
 #include "rviz_vive_plugin/vive_conversions.h"
+#include <rviz_vive_plugin_msgs/ControllerVibration.h>
 
 #endif
 
@@ -76,9 +77,9 @@ private Q_SLOTS:
     void OffsetTopicPropertyChanged();
 
 private:
-    void LeftVibrationMessageReceived(const std_msgs::Float32Ptr &msg);
+    void LeftVibrationMessageReceived(const rviz_vive_plugin_msgs::ControllerVibrationPtr &msg);
 
-    void RightVibrationMessageReceived(const std_msgs::Float32Ptr &msg);
+    void RightVibrationMessageReceived(const rviz_vive_plugin_msgs::ControllerVibrationPtr &msg);
 
     void HMDOffsetMessageReceived(const geometry_msgs::Point32Ptr &msg);
 
