@@ -282,7 +282,7 @@ std::string Vive::TrackedDeviceString(vr::TrackedDeviceIndex_t unDevice, vr::Tra
 
 bool Vive::LoadPoseActionData(const vr::VRActionHandle_t &action, vr::TrackedDevicePose_t &result) {
     vr::InputPoseActionData_t data{};
-    auto error = vr::VRInput()->GetPoseActionData(
+    auto error = vr::VRInput()->GetPoseActionDataRelativeToNow(
             action, vr::TrackingUniverseStanding, 0, &data, sizeof(data), vr::k_ulInvalidInputValueHandle);
     if (error != vr::VRInputError_None || !data.bActive || !data.pose.bPoseIsValid)
         return false;
